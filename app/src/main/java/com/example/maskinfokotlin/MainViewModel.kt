@@ -1,28 +1,23 @@
 package com.example.maskinfokotlin
 
+import androidx.hilt.Assisted
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.maskinfokotlin.model.Store
 import com.example.maskinfokotlin.repository.MaskService
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 
-class MainViewModel : ViewModel() {
+class MainViewModel @ViewModelInject constructor(
+    private val service: MaskService,
+    @Assisted private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
     val itemLiveData = MutableLiveData<List<Store>>()
     val loadingLiveData = MutableLiveData<Boolean>()
 
-    private val service: MaskService
-
     init {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(MaskService.BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
-
-        service = retrofit.create(MaskService::class.java)
-
         fetchStoreInfo()
     }
 
