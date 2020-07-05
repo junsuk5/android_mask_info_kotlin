@@ -1,36 +1,43 @@
 package com.example.maskinfokotlin
 
+import android.annotation.SuppressLint
+import android.app.Application
 import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.maskinfokotlin.model.Store
 import com.example.maskinfokotlin.repository.MaskService
+import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.launch
 
 class MainViewModel @ViewModelInject constructor(
     private val service: MaskService,
-    @Assisted private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+    private val locationProvider: FusedLocationProviderClient,
+    @Assisted private val savedStateHandle: SavedStateHandle,
+    application: Application
+) : AndroidViewModel(application) {
     val itemLiveData = MutableLiveData<List<Store>>()
     val loadingLiveData = MutableLiveData<Boolean>()
 
-    init {
-        fetchStoreInfo()
-    }
-
+    @SuppressLint("MissingPermission")
     fun fetchStoreInfo() {
         // 로딩 시작
         loadingLiveData.value = true
 
-        viewModelScope.launch {
-            val storeInfo = service.fetchStoreInfo(37.188078, 127.043002)
-            itemLiveData.value = storeInfo.stores
+        locationProvider.lastLocation
+            .addOnSuccessListener { location ->
+                location?.let {
+                    viewModelScope.launch {
+                        val storeInfo = service.fetchStoreInfo(location.latitude, location.longitude)
+                        itemLiveData.value = storeInfo.stores
 
-            // 로딩 끝
-            loadingLiveData.value = false
-        }
+                        // 로딩 끝
+                        loadingLiveData.value = false
+                    }
+                }
+            }
     }
 }
