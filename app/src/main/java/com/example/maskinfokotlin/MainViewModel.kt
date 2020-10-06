@@ -32,7 +32,9 @@ class MainViewModel @ViewModelInject constructor(
                 location?.let {
                     viewModelScope.launch {
                         val storeInfo = service.fetchStoreInfo(location.latitude, location.longitude)
-                        itemLiveData.value = storeInfo.stores
+                        itemLiveData.value = storeInfo.stores.filter { store ->
+                            store.remain_stat != null
+                        }
 
                         // 로딩 끝
                         loadingLiveData.value = false
